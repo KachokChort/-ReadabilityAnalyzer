@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Анализатор читабельности</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #219a52;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: #ecf0f1;
+            border-radius: 8px;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .level {
+            font-size: 20px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .stat {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .recommendations {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .recommendations h3 {
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .recommendations ul {
+            list-style: none;
+        }
+
+        .recommendations li {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .recommendations li:last-child {
+            border-bottom: none;
+        }
+
+        .text-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .text-preview h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 Анализатор читабельности</h1>
+    <p class="subtitle">Проверьте сложность вашего текста</p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="text">Введите текст:</label>
+            <textarea name="text" id="text" placeholder="Введите текст для анализа...">{% if text %}{{ text }}{% endif %}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Язык текста:</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="language" value="russian" {% if not language or language== 'russian'
+                    %}checked{% endif %}>
+                    Русский
+                </label>
+                <label>
+                    <input type="radio" name="language" value="english" {% if language== 'english' %}checked{% endif %}>
+                    Английский
+                </label>
+            </div>
+        </div>
+
+        <button type="submit">Анализировать текст</button>
+    </form>
+
+    {% if score is defined %}
+    <div class="result">
+        <div class="score-display">
+            <div class="score">{{ score }}</div>
+            <div class="level">{{ level }}</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-number">{{ stats.words }}</span>
+                <span class="stat-label">слов</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ stats.sentences }}</span>
+                <span class="stat-label">предложений</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ stats.reading_time }}</span>
+                <span class="stat-label">секунд чтения</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ stats.words_per_sentence }}</span>
+                <span class="stat-label">слов/предложение</span>
+            </div>
+        </div>
+
+        <div class="recommendations">
+            <h3>💡 Рекомендации:</h3>
+            <ul>
+                {% for recommendation in recommendations %}
+                <li>{{ recommendation }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="text-preview">
+            <h3>📝 Ваш текст:</h3>
+            <p>{{ text[:200] }}{% if text|length > 200 %}...{% endif %}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
