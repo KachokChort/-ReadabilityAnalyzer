@@ -34,7 +34,6 @@ async def analyze_text(request: TextRequest):
         raise HTTPException(status_code=400, detail="Could not analyze text")
 
 
-    # Добавляем интерпретацию результата
     if result >= 90:
         level = "Very Easy"
     elif result >= 80:

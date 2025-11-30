@@ -5,7 +5,6 @@ MAX_RES_RU = 225.22
 
 
 def count_syllables_en(word):
-    """Подсчет слогов для английского"""
     word = word.lower()
     if len(word) <= 3:
         return 1
@@ -13,13 +12,11 @@ def count_syllables_en(word):
     count = 0
     vowels = "aeiouy"
 
-    # Учитываем окончания которые не дают слогов
     if word.endswith(('e', 'es', 'ed')) and not word.endswith(('le', 'les')):
         word = word[:-1]
 
     for i in range(len(word)):
         if word[i] in vowels:
-            # Не считаем две гласные подряд как отдельные слоги
             if i == 0 or word[i - 1] not in vowels:
                 count += 1
 
@@ -27,7 +24,6 @@ def count_syllables_en(word):
 
 
 def count_syllables_ru(word):
-    """Подсчет слогов для русского"""
     vowels = "аеёиоуыэюя"
     word = word.lower()
     count = 0
@@ -43,20 +39,16 @@ def english(text):
     if not text.strip():
         return None
 
-    # Правильный подсчет предложений
     sentences = re.split(r'[.!?]+', text)
     sentences = [s.strip() for s in sentences if s.strip()]
 
-    # Правильный подсчет слов
     words = re.findall(r'\b[a-z]+\b', text, re.IGNORECASE)
 
     if not sentences or not words:
         return None
 
-    # Подсчет слогов
     total_syllables = sum(count_syllables_en(word) for word in words)
 
-    # Формула Флеша-Кинкейда для английского
     avg_words_per_sentence = len(words) / len(sentences)
     avg_syllables_per_word = total_syllables / len(words)
 
@@ -72,20 +64,16 @@ def russian(text):
     if not text.strip():
         return None
 
-    # Правильный подсчет предложений
     sentences = re.split(r'[.!?]+', text)
     sentences = [s.strip() for s in sentences if s.strip()]
 
-    # Правильный подсчет слов
     words = re.findall(r'\b[а-я]+\b', text, re.IGNORECASE)
 
     if not sentences or not words:
         return None
 
-    # Подсчет слогов
     total_syllables = sum(count_syllables_ru(word) for word in words)
 
-    # Адаптированная формула для русского
     avg_words_per_sentence = len(words) / len(sentences)
     avg_syllables_per_word = total_syllables / len(words)
 
