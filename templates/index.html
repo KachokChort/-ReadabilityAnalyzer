@@ -12,29 +12,85 @@
         body {
             font-family: Arial, sans-serif;
             background: #f0f2f5;
-            padding: 20px;
             line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar nav a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        .sidebar nav a:hover {
+            background: #34495e;
+        }
+
+        .sidebar nav a.active {
+            background: #3498db;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
             background: white;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 10px;
+        .page {
+            display: none;
         }
 
-        .subtitle {
-            color: #7f8c8d;
-            text-align: center;
-            margin-bottom: 30px;
+        .page.active {
+            display: block;
         }
 
         .form-group {
@@ -195,82 +251,310 @@
             color: #2c3e50;
             margin-bottom: 10px;
         }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .test-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .test-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .test-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .test-level {
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .test-text {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        .test-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .test-recommendations {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .test-recommendations ul {
+            list-style: none;
+            margin-top: 10px;
+        }
+
+        .test-recommendations li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+
+        .test-recommendations li:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>📊 Анализатор читабельности</h1>
-    <p class="subtitle">Проверьте сложность вашего текста</p>
+<!-- Боковая панель -->
+<div class="sidebar">
+    <h2>Readability</h2>
+    <nav>
+        <ul>
+            <li><a onclick="showTab('analyzer')" class="active">📊 Анализатор текста</a></li>
+            <li><a onclick="showTab('tests')">📝 Мои тесты</a></li>
+            <li><a href="{{ url_for('login') }}">🚪 Выйти</a></li>
+        </ul>
+    </nav>
+</div>
 
-    {% if error %}
-    <div class="error">{{ error }}</div>
-    {% endif %}
+<!-- Основной контент -->
+<div class="main-content">
+    <!-- Шапка -->
+    <div class="header">
+        <h1 id="pageTitle">📊 Анализатор читабельности</h1>
+        <p class="subtitle" id="pageSubtitle">Проверьте сложность вашего текста</p>
+    </div>
 
-    <form method="POST">
-        <div class="form-group">
-            <label for="text">Введите текст:</label>
-            <textarea name="text" id="text" placeholder="Введите текст для анализа...">{% if text %}{{ text }}{% endif %}</textarea>
-        </div>
+    <!-- Страница анализатора -->
+    <div id="analyzer" class="page active">
+        <div class="container">
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
 
-        <div class="form-group">
-            <label>Язык текста:</label>
-            <div class="radio-group">
-                <label>
-                    <input type="radio" name="language" value="russian" {% if not language or language== 'russian'
-                    %}checked{% endif %}>
-                    Русский
-                </label>
-                <label>
-                    <input type="radio" name="language" value="english" {% if language== 'english' %}checked{% endif %}>
-                    Английский
-                </label>
+            <form method="POST" action="/">
+                <div class="form-group">
+                    <label for="text">Введите текст:</label>
+                    <textarea name="text" id="text" placeholder="Введите текст для анализа...">{% if text %}{{ text }}{% endif %}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Язык текста:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="language" value="russian" {% if not language or language==
+                            'russian' %}checked{% endif %}>
+                            Русский
+                        </label>
+                        <label>
+                            <input type="radio" name="language" value="english" {% if language== 'english' %}checked{%
+                            endif %}>
+                            Английский
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit">Анализировать текст</button>
+            </form>
+
+            {% if score is defined %}
+            <div class="result">
+                <div class="score-display">
+                    <div class="score">{{ score }}</div>
+                    <div class="level">{{ level }}</div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-number">{{ stats.words }}</span>
+                        <span class="stat-label">слов</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ stats.sentences }}</span>
+                        <span class="stat-label">предложений</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ stats.reading_time }}</span>
+                        <span class="stat-label">секунд чтения</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">{{ stats.words_per_sentence }}</span>
+                        <span class="stat-label">слов/предложение</span>
+                    </div>
+                </div>
+
+                <div class="recommendations">
+                    <h3>💡 Рекомендации:</h3>
+                    <ul>
+                        {% for recommendation in recommendations %}
+                        <li>{{ recommendation }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="text-preview">
+                    <h3>📝 Ваш текст:</h3>
+                    <p>{{ text[:200] }}{% if text|length > 200 %}...{% endif %}</p>
+                </div>
             </div>
-        </div>
-
-        <button type="submit">Анализировать текст</button>
-    </form>
-
-    {% if score is defined %}
-    <div class="result">
-        <div class="score-display">
-            <div class="score">{{ score }}</div>
-            <div class="level">{{ level }}</div>
-        </div>
-
-        <div class="stats">
-            <div class="stat">
-                <span class="stat-number">{{ stats.words }}</span>
-                <span class="stat-label">слов</span>
+            <div style="text-align: center; margin-top: 20px;">
+                <form method="POST" action="/save_test">
+                    <input type="hidden" name="text" value="{{ text }}">
+                    <input type="hidden" name="score" value="{{ score }}">
+                    <button type="submit" style="background: #e67e22; width: auto; padding: 10px 20px;">💾 Сохранить
+                        тест
+                    </button>
+                </form>
             </div>
-            <div class="stat">
-                <span class="stat-number">{{ stats.sentences }}</span>
-                <span class="stat-label">предложений</span>
-            </div>
-            <div class="stat">
-                <span class="stat-number">{{ stats.reading_time }}</span>
-                <span class="stat-label">секунд чтения</span>
-            </div>
-            <div class="stat">
-                <span class="stat-number">{{ stats.words_per_sentence }}</span>
-                <span class="stat-label">слов/предложение</span>
-            </div>
-        </div>
-
-        <div class="recommendations">
-            <h3>💡 Рекомендации:</h3>
-            <ul>
-                {% for recommendation in recommendations %}
-                <li>{{ recommendation }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <div class="text-preview">
-            <h3>📝 Ваш текст:</h3>
-            <p>{{ text[:200] }}{% if text|length > 200 %}...{% endif %}</p>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
+
+    <!-- Страница "Мои тесты" -->
+    <div id="tests" class="page">
+        <div class="container">
+            <h2>📝 Мои тесты</h2>
+
+            {% if tests %}
+            {% for test in tests %}
+            <div class="test-card">
+                <div class="test-header">
+                    <div class="test-title">{{ test.name }}</div>
+                    <div class="test-score">{{ test.score }}</div>
+                </div>
+
+                <div class="test-level">{{ test.level }}</div>
+
+                <div class="test-text">
+                    {{ test.text }}
+                </div>
+
+                <div class="test-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ test.words }}</div>
+                        <div class="stat-label">слов</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ test.sentences }}</div>
+                        <div class="stat-label">предложений</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ test.words_per_sentence }}</div>
+                        <div class="stat-label">слов/предложение</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ test.reading_time }}</div>
+                        <div class="stat-label">сек чтения</div>
+                    </div>
+                </div>
+
+                <div class="test-recommendations">
+                    <strong>Рекомендации:</strong>
+                    <ul>
+                        {% for rec in test.recommendations %}
+                        <li>{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <h3>📝 Пока нет тестов</h3>
+                <p>Вы еще не анализировали тексты. Начните с вкладки "Анализатор текста"!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Страница "Профиль" -->
+    <div id="profile" class="page">
+        <div class="container">
+            <div class="empty-state">
+                <h3>👤 Профиль</h3>
+                <p>Информация о вашем профиле</p>
+                <p style="margin-top: 20px; font-size: 14px; color: #bdc3c7;">
+                    Функция в разработке...
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    function showTab(tabName) {
+        document.querySelectorAll('.page').forEach(page => {
+            page.style.display = 'none';
+        });
+        document.getElementById(tabName).style.display = 'block';
+
+        document.querySelectorAll('.sidebar nav a').forEach(link => {
+            link.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        const titles = {
+            'analyzer': ['📊 Анализатор читабельности', 'Проверьте сложность вашего текста'],
+            'tests': ['📝 Мои тесты', 'История ваших анализов'],
+            'profile': ['👤 Профиль', 'Управление вашим аккаунтом']
+        };
+
+        if (titles[tabName]) {
+            document.getElementById('pageTitle').textContent = titles[tabName][0];
+            document.getElementById('pageSubtitle').textContent = titles[tabName][1];
+        }
+    }
+</script>
 </body>
 </html>

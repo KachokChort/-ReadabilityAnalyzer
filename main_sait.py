@@ -1,7 +1,14 @@
 from flask import Flask, render_template, request
 from functions import english, russian
+from flask import Flask, render_template, request, session, redirect, url_for
+from data import db_session
+from data.users import User
+from data.texts import Text
+from datetime import datetime
+import json
 
 app = Flask(__name__)
+app.secret_key = 'Jigjdfhdjsfjnseufnsnfsufsuikf'
 
 
 def get_readability_level(score):
@@ -84,7 +91,117 @@ def index():
                                text=text,
                                language=language)
 
-    return render_template('index.html')
+    db_session.global_init("db/db.db")
+    db_sess = db_session.create_session()
+    users = [user.username for user in db_sess.query(User).all()]
+    if session.get("user", "") not in users:
+        return redirect(url_for("register"))
+
+    texts = [text for text in db_sess.query(Text).filter(Text.user == session.get("user", ""))]
+
+    return render_template('index.html', tests=texts)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if not username or not password or not username.strip() or not password.strip():
+            return render_template('register.html', error="Необходимо ввести пароль и имя пользователя.")
+        if len(password) <= 3:
+            return render_template('register.html', error="Короткий пароль.")
+
+        try:
+            db_session.global_init("db/db.db")
+            db_sess = db_session.create_session()
+            users = [user.username for user in db_sess.query(User).all()]
+            if username not in users:
+                return render_template('login.html', error="Такого пользователя не существует")
+            user_password = db_sess.query(User).filter(User.username == username).first().password
+            if password != user_password:
+                return render_template('login.html', error="Неправильный пароль")
+        except Exception as e:
+            return render_template('login.html', error=e)
+
+        session['user'] = username
+        return redirect(url_for('index'))
+
+    session.clear()
+
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if not username or not password or not username.strip() or not password.strip():
+            return render_template('register.html', error="Необходимо ввести пароль и имя пользователя.")
+        if len(password) <= 3:
+            return render_template('register.html', error="Короткий пароль.")
+
+        try:
+            db_session.global_init("db/db.db")
+            db_sess = db_session.create_session()
+            users = [user.username for user in db_sess.query(User).all()]
+            if username in users:
+                return render_template('register.html', error="Такой пользователь уже существует.")
+            new_user = User()
+            new_user.username = username
+            new_user.password = password
+            db_sess.add(new_user)
+            db_sess.commit()
+            db_sess.close()
+        except Exception as e:
+            return render_template('login.html', error=e)
+
+        session['user'] = username
+        return redirect(url_for('index'))
+
+    return render_template('register.html')
+
+
+@app.route('/save_test', methods=['POST'])
+def save_test():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    try:
+        db_session.global_init("db/db.db")
+        db_sess = db_session.create_session()
+
+        new_text = Text()
+
+        text = request.form.get('text')
+        score = float(request.form.get('score'))
+
+        stats = analyze_text_stats(text, score)
+        level = get_readability_level(score)
+        recommendations = get_recommendations(score, stats)
+
+        new_text.name = f"Анализ от {datetime.now().strftime('%d.%m.%Y %H:%M')}"
+        new_text.user = session['user']
+        new_text.text = text
+        new_text.score = str(score)
+        new_text.level = str(level)
+        new_text.sentences = str(stats.get("sentences"))
+        new_text.words = str(stats.get("words"))
+        new_text.words_per_sentence = str(stats.get("words_per_sentence"))
+        new_text.reading_time = str(stats.get("reading_time"))
+        new_text.recommendations = recommendations
+
+        db_sess.add(new_text)
+        db_sess.commit()
+        db_sess.close()
+
+    except Exception as e:
+        print(f"Error saving test: {e}")
+
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':
